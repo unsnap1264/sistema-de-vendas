@@ -78,7 +78,7 @@
     </div>
 
     <div class="campo">
-      <label>Buscar Cliente (Nome ou CPF):</label>
+      <label>Buscar Cliente (Nome, CPF ou CNPJ):</label>
       <input type="text" id="busca-cliente" placeholder="Digite para filtrar..." onfocus="filtrarClientes()" oninput="filtrarClientes()">
       <div id="sugestoes-clientes" class="sugestoes"></div>
     </div>
@@ -137,7 +137,7 @@
 
     <h3>Vendas Registradas</h3>
     <div class="row">
-      <div><button type="button" class="btn-export" onclick="exportarVendasCSV()">Exportar Vendas (CSV)</button></div>
+      <div><button type="button" class="btn-export" onclick="exportarVendasCSV()">Exportar Vendas (Planilha CSV)</button></div>
     </div>
     <div id="lista-vendas"></div>
   </div>
@@ -145,14 +145,14 @@
   <div id="aba-clientes" class="aba">
     <h3>Novo Cliente</h3>
     <div class="campo">
-      <label>Nome Completo: *</label>
-      <input type="text" id="cli-nome" placeholder="Ex: Maria Oliveira">
+      <label>Nome Completo ou Razão Social: *</label>
+      <input type="text" id="cli-nome" placeholder="Ex: Maria Oliveira ou Empresa LTDA">
     </div>
 
     <div class="row">
       <div>
-        <label>CPF: *</label>
-        <input type="text" id="cli-cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
+        <label>CPF ou CNPJ: *</label>
+        <input type="text" id="cli-cpf" inputmode="numeric" placeholder="CPF ou CNPJ" maxlength="18" oninput="mascaraDoc(this)">
       </div>
       <div>
         <label>Telefone / WhatsApp:</label>
@@ -385,7 +385,7 @@
     }
   });
 
-  // --- MÁSCARAS E VALIDAÇÕES ---
+  // --- MÁSCARAS E VALIDAÇÃO HÍBRIDA (CPF / CNPJ) ---
   function cursorNoFinal(input) {
     setTimeout(() => {
       const len = input.value.length;
@@ -408,9 +408,18 @@
     return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  function mascaraCPF(i) {
+  function mascaraDoc(i) {
     let v = i.value.replace(/\D/g, '');
-    v = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d)/, '$1.$2');
+      v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+      v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+      v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+      v = v.replace(/(\d{4})(\d)/, '$1-$2');
+    }
     i.value = v;
   }
 
@@ -424,19 +433,50 @@
     i.value = i.value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, '$1-$2');
   }
 
-  function validarCPF(cpf) {
-    cpf = cpf.replace(/[^\d]+/g, '');
-    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-    let soma = 0;
-    for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
-    let resto = 11 - (soma % 11);
-    let dig1 = (resto === 10 || resto === 11) ? 0 : resto;
-    if (dig1 !== parseInt(cpf.charAt(9))) return false;
-    soma = 0;
-    for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
-    resto = 11 - (soma % 11);
-    let dig2 = (resto === 10 || resto === 11) ? 0 : resto;
-    return dig2 === parseInt(cpf.charAt(10));
+  function validarDoc(doc) {
+    doc = doc.replace(/[^\d]+/g, '');
+    if (/^(\d)\1+$/.test(doc)) return false;
+
+    if (doc.length === 11) {
+      let soma = 0;
+      for (let i = 0; i < 9; i++) soma += parseInt(doc.charAt(i)) * (10 - i);
+      let resto = 11 - (soma % 11);
+      let dig1 = (resto === 10 || resto === 11) ? 0 : resto;
+      if (dig1 !== parseInt(doc.charAt(9))) return false;
+
+      soma = 0;
+      for (let i = 0; i < 10; i++) soma += parseInt(doc.charAt(i)) * (11 - i);
+      resto = 11 - (soma % 11);
+      let dig2 = (resto === 10 || resto === 11) ? 0 : resto;
+      return dig2 === parseInt(doc.charAt(10));
+    } 
+    
+    if (doc.length === 14) {
+      let tamanho = doc.length - 2;
+      let numeros = doc.substring(0, tamanho);
+      let digitos = doc.substring(tamanho);
+      let soma = 0;
+      let pos = tamanho - 7;
+      for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+      }
+      let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      if (resultado != digitos.charAt(0)) return false;
+
+      tamanho = tamanho + 1;
+      numeros = doc.substring(0, tamanho);
+      soma = 0;
+      pos = tamanho - 7;
+      for (let i = tamanho; i >= 1; i--) {
+        soma += numeros.charAt(tamanho - i) * pos--;
+        if (pos < 2) pos = 9;
+      }
+      resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+      return resultado == digitos.charAt(1);
+    }
+
+    return false;
   }
   // --- CADASTRO DE CLIENTES ---
   function cadastrarCliente() {
@@ -449,12 +489,12 @@
     const bairro = document.getElementById('cli-bairro').value.trim();
     const cidade = document.getElementById('cli-cidade').value.trim();
 
-    if (!nome) return avisar('Digite o Nome Completo.', true);
-    if (!validarCPF(cpf)) return avisar('CPF inválido!', true);
+    if (!nome) return avisar('Digite o Nome ou Razão Social.', true);
+    if (!validarDoc(cpf)) return avisar('CPF ou CNPJ inválido! Verifique os números.', true);
 
-    const cpfLimpo = cpf.replace(/\D/g, '');
-    if (clientes.some(c => c.cpf.replace(/\D/g, '') === cpfLimpo)) {
-      return avisar('Este CPF já está cadastrado.', true);
+    const docLimpo = cpf.replace(/\D/g, '');
+    if (clientes.some(c => c.cpf.replace(/\D/g, '') === docLimpo)) {
+      return avisar('Este CPF ou CNPJ já está cadastrado.', true);
     }
 
     const novo = { nome, cpf, tel, email, cep, rua, bairro, cidade };
@@ -482,6 +522,7 @@
     clientes.forEach((c, i) => {
       const contato = [c.tel, c.email].filter(Boolean).join(' • ') || 'Sem contato';
       const endereco = [c.rua, c.bairro, c.cidade, c.cep].filter(Boolean).join(', ') || 'Sem endereço';
+      const tipoDoc = c.cpf.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF';
 
       container.innerHTML += `
         <div class="venda-card" style="border-left-color: #007bff;">
@@ -490,7 +531,7 @@
             <button type="button" class="btn-del" onclick="removerCliente(${i})">Excluir</button>
           </div>
           <div style="font-size: 13px; color: #555; line-height: 1.5;">
-            <strong>CPF:</strong> ${c.cpf}<br>
+            <strong>${tipoDoc}:</strong> ${c.cpf}<br>
             <strong>Contato:</strong> ${contato}<br>
             <strong>End:</strong> ${endereco}
           </div>
@@ -698,7 +739,7 @@
 
   function exportarClientesCSV() {
     if (clientes.length === 0) return avisar('Nenhum cliente cadastrado.', true);
-    let csv = '\uFEFFNome;CPF;Telefone;Email;CEP;Rua;Bairro;Cidade\n';
+    let csv = '\uFEFFNome;CPF_CNPJ;Telefone;Email;CEP;Rua;Bairro;Cidade\n';
     clientes.forEach(c => {
       csv += `"${c.nome}";"${c.cpf}";"${c.tel || ''}";"${c.email || ''}";"${c.cep || ''}";"${c.rua || ''}";"${c.bairro || ''}";"${c.cidade || ''}"\n`;
     });
@@ -718,8 +759,8 @@
         const cols = linha.split(';').map(c => c.replace(/^"|"$/g, '').trim());
         const [nome, cpf, tel, email, cep, rua, bairro, cidade] = cols;
         if (nome && cpf) {
-          const cpfLimpo = cpf.replace(/\D/g, '');
-          if (!clientes.some(c => c.cpf.replace(/\D/g, '') === cpfLimpo)) {
+          const docLimpo = cpf.replace(/\D/g, '');
+          if (!clientes.some(c => c.cpf.replace(/\D/g, '') === docLimpo)) {
             clientes.push({ nome, cpf, tel: tel || '', email: email || '', cep: cep || '', rua: rua || '', bairro: bairro || '', cidade: cidade || '' });
             novos++;
           }
