@@ -427,7 +427,7 @@
     avisar('Venda registrada na tabela abaixo!');
   }
 
-  function enviarWhatsApp(index) {
+    function enviarWhatsApp(index) {
     const v = vendas[index];
     if (!v) return;
 
@@ -444,17 +444,25 @@
     mensagem += `*Total Final:* R$ ${formatarBR(v.tot)}`;
     if (v.obs) mensagem += `\n*Obs:* ${v.obs}`;
 
+    // 1. Copia o texto para a área de transferência
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(mensagem).catch(() => copiarFallback(mensagem));
     } else {
       copiarFallback(mensagem);
     }
 
-    avisar('Resumo copiado! Abrindo o WhatsApp para escolher o contato ou grupo...');
-
-    const urlWhats = `https://whatsapp.com{encodeURIComponent(mensagem)}`;
-    window.open(urlWhats, '_blank');
+    // 2. Abre o menu nativo de compartilhamento do celular (ou WhatsApp Web no PC)
+    if (navigator.share) {
+      navigator.share({
+        title: 'Resumo do Pedido',
+        text: mensagem
+      }).catch(() => {});
+    } else {
+      avisar('Texto copiado! Cole diretamente no WhatsApp (Ctrl+V).');
+      window.open('https://wa.me' + encodeURIComponent(mensagem), '_blank');
+    }
   }
+
 
   function copiarFallback(texto) {
     const area = document.createElement('textarea');
