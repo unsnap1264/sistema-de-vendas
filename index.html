@@ -31,7 +31,13 @@
     .btn-export { background: #17a2b8; font-size: 13px; height: 40px; }
     .btn-import { background: #6f42c1; font-size: 13px; height: 40px; }
     .btn-backup { background: #343a40; font-size: 13px; height: 40px; }
+    .btn-cancel { background: #6c757d; margin-top: 8px; }
     .btn-del { background: #dc3545; width: auto; height: 32px; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-edit { background: #ffc107; color: #212529; width: auto; height: 32px; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-share-sm { background: #25D366; color: #fff; width: auto; height: 32px; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .acoes-card { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+    .edit-banner { background: #fff3cd; border: 1px solid #ffe69c; color: #664d03; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: bold; margin-bottom: 10px; display: none; justify-content: space-between; align-items: center; }
 
     .sugestoes { border: 1px solid #007bff; border-top: none; border-radius: 0 0 8px 8px; max-height: 180px; overflow-y: auto; background: #fff; position: absolute; width: 100%; z-index: 50; box-shadow: 0 4px 10px rgba(0,0,0,0.15); display: none; }
     .sugestao-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; }
@@ -50,10 +56,11 @@
     .card-topo.desc strong { color: #ffc107; }
 
     .venda-card { background: #fff; border: 1px solid #ddd; border-left: 5px solid #28a745; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-    .venda-card-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 14px; margin-bottom: 6px; color: #111; }
+    .venda-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; font-weight: bold; font-size: 14px; margin-bottom: 6px; color: #111; }
     .venda-card-itens { font-size: 13px; color: #444; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 8px; line-height: 1.4; }
     .venda-card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 10px; }
-    .btn-share-full { background: #25D366; color: #fff; width: 100%; height: 42px; font-size: 14px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-share-full { background: #25D366; color: #fff; flex: 1; height: 42px; font-size: 14px; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-edit-full { background: #ffc107; color: #212529; width: auto; padding: 0 14px; height: 42px; font-size: 14px; border-radius: 8px; }
 
     #status { padding: 10px; margin-bottom: 12px; border-radius: 8px; display: none; font-weight: bold; text-align: center; font-size: 13px; }
   </style>
@@ -75,6 +82,11 @@
     <div class="totais-topo">
       <div class="card-topo">Total Vendido<strong id="total-geral-vendido">R$ 0,00</strong></div>
       <div class="card-topo desc">Total Descontos<strong id="total-geral-desconto">R$ 0,00</strong></div>
+    </div>
+
+    <div id="banner-edit-venda" class="edit-banner">
+      <span>Editando pedido existente</span>
+      <button type="button" class="btn-del" onclick="cancelarEdicaoVenda()">Cancelar</button>
     </div>
 
     <div class="campo">
@@ -130,7 +142,8 @@
         Total Final: <strong style="color: #28a745; font-size: 20px;">R$ <span id="tot-pedido">0,00</span></strong>
       </div>
 
-      <button type="button" onclick="registrarVenda()">Finalizar e Registrar Venda</button>
+      <button type="button" id="btn-salvar-venda" onclick="registrarVenda()">Finalizar e Registrar Venda</button>
+      <button type="button" id="btn-cancelar-venda" class="btn-cancel" style="display:none;" onclick="cancelarEdicaoVenda()">Cancelar Edição</button>
     </div>
 
     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
@@ -141,9 +154,14 @@
     </div>
     <div id="lista-vendas"></div>
   </div>
-  <!-- ABA 2: CADASTRO DE CLIENTES -->
+<!-- ABA 2: CADASTRO DE CLIENTES -->
   <div id="aba-clientes" class="aba">
-    <h3>Novo Cliente</h3>
+    <h3 id="titulo-form-cliente">Novo Cliente</h3>
+    <div id="banner-edit-cliente" class="edit-banner">
+      <span>Editando cadastro de cliente</span>
+      <button type="button" class="btn-del" onclick="cancelarEdicaoCliente()">Cancelar</button>
+    </div>
+
     <div class="campo">
       <label>Nome Completo ou Razão Social: *</label>
       <input type="text" id="cli-nome" placeholder="Ex: Maria Oliveira ou Empresa LTDA">
@@ -187,7 +205,8 @@
       </div>
     </div>
 
-    <button type="button" onclick="cadastrarCliente()">Salvar Cliente</button>
+    <button type="button" id="btn-salvar-cliente" onclick="cadastrarCliente()">Salvar Cliente</button>
+    <button type="button" id="btn-cancelar-cliente" class="btn-cancel" style="display:none;" onclick="cancelarEdicaoCliente()">Cancelar Edição</button>
 
     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
 
@@ -203,12 +222,18 @@
 
   <!-- ABA 3: CADASTRO DE PRODUTOS E BACKUP -->
   <div id="aba-produtos" class="aba">
-    <h3>Novo Produto</h3>
+    <h3 id="titulo-form-produto">Novo Produto</h3>
+    <div id="banner-edit-produto" class="edit-banner">
+      <span>Editando produto</span>
+      <button type="button" class="btn-del" onclick="cancelarEdicaoProduto()">Cancelar</button>
+    </div>
+
     <div class="campo">
       <label>Nome do Produto: *</label>
       <input type="text" id="prod-nome" placeholder="Ex: TENÉBRIO MOLITOR DESIDRATADO 50G">
     </div>
-    <button type="button" onclick="cadastrarProduto()">Salvar Produto</button>
+    <button type="button" id="btn-salvar-produto" onclick="cadastrarProduto()">Salvar Produto</button>
+    <button type="button" id="btn-cancelar-produto" class="btn-cancel" style="display:none;" onclick="cancelarEdicaoProduto()">Cancelar Edição</button>
 
     <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
 
@@ -281,11 +306,21 @@
   let clienteSelecionado = null;
   let produtoSelecionado = null;
   let carrinho = [];
-  function mudarAba(idAba, botao) {
+
+  let editandoVendaIdx = null;
+  let editandoClienteIdx = null;
+  let editandoProdutoIdx = null;
+function mudarAba(idAba, botao) {
     document.querySelectorAll('.aba').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(idAba).classList.add('active');
-    botao.classList.add('active');
+    if (botao) botao.classList.add('active');
+  }
+
+  function ativarAbaPorId(idAba) {
+    const btns = document.querySelectorAll('.tab-btn');
+    const mapa = { 'aba-vendas': 0, 'aba-clientes': 1, 'aba-produtos': 2 };
+    mudarAba(idAba, btns[mapa[idAba]]);
   }
 
   function avisar(msg, erro = false) {
@@ -294,7 +329,8 @@
     el.style.display = 'block';
     el.style.background = erro ? '#f8d7da' : '#d4edda';
     el.style.color = erro ? '#721c24' : '#155724';
-    setTimeout(() => { el.style.display = 'none'; }, 3500);
+    clearTimeout(window._timerAviso);
+    window._timerAviso = setTimeout(() => { el.style.display = 'none'; }, 3500);
   }
 
   // --- BUSCA RÁPIDA DE CLIENTES ---
@@ -425,7 +461,7 @@
 
   function mascaraTel(i) {
     let v = i.value.replace(/\D/g, '');
-    v = v.replace(/^(\d{2})(\d)/g, '($1) $2').replace(/(\d)(\d{4})$/, '$1-$2');
+    v = v.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d)(\d{4})$/, '$1-$2');
     i.value = v;
   }
 
@@ -478,7 +514,58 @@
 
     return false;
   }
-  // --- CADASTRO DE CLIENTES ---
+
+  function enviarTextoCompartilhamento(titulo, msg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg).catch(() => {});
+    }
+
+    if (navigator.share) {
+      navigator.share({ title: titulo, text: msg }).catch(() => {});
+    } else {
+      avisar('Texto copiado! Abrindo WhatsApp...');
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+    }
+  }
+
+  // --- CADASTRO E EDIÇÃO DE CLIENTES ---
+  function limparFormCliente() {
+    ['cli-nome', 'cli-cpf', 'cli-tel', 'cli-email', 'cli-cep', 'cli-rua', 'cli-bairro', 'cli-cidade'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+
+  function iniciarEdicaoCliente(index) {
+    const c = clientes[index];
+    if (!c) return;
+    editandoClienteIdx = index;
+
+    document.getElementById('cli-nome').value = c.nome || '';
+    document.getElementById('cli-cpf').value = c.cpf || '';
+    document.getElementById('cli-tel').value = c.tel || '';
+    document.getElementById('cli-email').value = c.email || '';
+    document.getElementById('cli-cep').value = c.cep || '';
+    document.getElementById('cli-rua').value = c.rua || '';
+    document.getElementById('cli-bairro').value = c.bairro || '';
+    document.getElementById('cli-cidade').value = c.cidade || '';
+
+    document.getElementById('titulo-form-cliente').textContent = 'Editar Cliente';
+    document.getElementById('banner-edit-cliente').style.display = 'flex';
+    document.getElementById('btn-salvar-cliente').textContent = 'Salvar Alterações do Cliente';
+    document.getElementById('btn-cancelar-cliente').style.display = 'block';
+    document.getElementById('cli-nome').focus();
+    avisar('Modo de edição de cliente ativado.');
+  }
+
+  function cancelarEdicaoCliente() {
+    editandoClienteIdx = null;
+    limparFormCliente();
+    document.getElementById('titulo-form-cliente').textContent = 'Novo Cliente';
+    document.getElementById('banner-edit-cliente').style.display = 'none';
+    document.getElementById('btn-salvar-cliente').textContent = 'Salvar Cliente';
+    document.getElementById('btn-cancelar-cliente').style.display = 'none';
+  }
+
   function cadastrarCliente() {
     const nome = document.getElementById('cli-nome').value.trim();
     const cpf = document.getElementById('cli-cpf').value.trim();
@@ -493,22 +580,54 @@
     if (!validarDoc(cpf)) return avisar('CPF ou CNPJ inválido! Verifique os números.', true);
 
     const docLimpo = cpf.replace(/\D/g, '');
-    if (clientes.some(c => c.cpf.replace(/\D/g, '') === docLimpo)) {
+    const duplicado = clientes.some((c, idx) => idx !== editandoClienteIdx && c.cpf.replace(/\D/g, '') === docLimpo);
+    if (duplicado) {
       return avisar('Este CPF ou CNPJ já está cadastrado.', true);
     }
 
-    const novo = { nome, cpf, tel, email, cep, rua, bairro, cidade };
-    clientes.push(novo);
-    db.salvar('app_clientes', clientes);
+    const dadosCliente = { nome, cpf, tel, email, cep, rua, bairro, cidade };
 
-    ['cli-nome', 'cli-cpf', 'cli-tel', 'cli-email', 'cli-cep', 'cli-rua', 'cli-bairro', 'cli-cidade'].forEach(id => document.getElementById(id).value = '');
-    
-    desenharClientesCards();
-    selecionarCliente(novo);
-    avisar('Cliente salvo e selecionado na venda!');
+    if (editandoClienteIdx !== null) {
+      const clienteAntigo = clientes[editandoClienteIdx];
+      clientes[editandoClienteIdx] = dadosCliente;
+      db.salvar('app_clientes', clientes);
+
+      if (clienteSelecionado && clienteSelecionado.cpf.replace(/\D/g, '') === clienteAntigo.cpf.replace(/\D/g, '')) {
+        clienteSelecionado = dadosCliente;
+        document.getElementById('cliente-selecionado-texto').textContent = `${dadosCliente.nome} (${dadosCliente.cpf})`;
+      }
+
+      cancelarEdicaoCliente();
+      desenharClientesCards();
+      avisar('Cadastro do cliente atualizado!');
+    } else {
+      clientes.push(dadosCliente);
+      db.salvar('app_clientes', clientes);
+      limparFormCliente();
+      desenharClientesCards();
+      selecionarCliente(dadosCliente);
+      avisar('Cliente salvo e selecionado na venda!');
+    }
+  }
+
+  function compartilharCliente(index) {
+    const c = clientes[index];
+    if (!c) return;
+    const tipoDoc = c.cpf.replace(/\D/g, '').length === 14 ? 'CNPJ' : 'CPF';
+    const endereco = [c.rua, c.bairro, c.cidade, c.cep ? `CEP ${c.cep}` : ''].filter(Boolean).join(', ');
+
+    let msg = `*CADASTRO DE CLIENTE*\n*Nome/Razão:* ${c.nome}\n*${tipoDoc}:* ${c.cpf}`;
+    if (c.tel) msg += `\n*Telefone/WhatsApp:* ${c.tel}`;
+    if (c.email) msg += `\n*E-mail:* ${c.email}`;
+    if (endereco) msg += `\n*Endereço:* ${endereco}`;
+
+    enviarTextoCompartilhamento('Cadastro de Cliente', msg);
   }
 
   function removerCliente(index) {
+    if (editandoClienteIdx === index) cancelarEdicaoCliente();
+    else if (editandoClienteIdx !== null && index < editandoClienteIdx) editandoClienteIdx--;
+
     clientes.splice(index, 1);
     db.salvar('app_clientes', clientes);
     desenharClientesCards();
@@ -528,7 +647,11 @@
         <div class="venda-card" style="border-left-color: #007bff;">
           <div class="venda-card-header">
             <span>${c.nome}</span>
-            <button type="button" class="btn-del" onclick="removerCliente(${i})">Excluir</button>
+            <div class="acoes-card">
+              <button type="button" class="btn-share-sm" onclick="compartilharCliente(${i})">Enviar</button>
+              <button type="button" class="btn-edit" onclick="iniciarEdicaoCliente(${i})">Editar</button>
+              <button type="button" class="btn-del" onclick="removerCliente(${i})">Excluir</button>
+            </div>
           </div>
           <div style="font-size: 13px; color: #555; line-height: 1.5;">
             <strong>${tipoDoc}:</strong> ${c.cpf}<br>
@@ -540,22 +663,79 @@
     });
   }
 
-  // --- CADASTRO DE PRODUTOS ---
+  // --- CADASTRO E EDIÇÃO DE PRODUTOS ---
+  function iniciarEdicaoProduto(index) {
+    const p = produtos[index];
+    if (!p) return;
+    editandoProdutoIdx = index;
+
+    document.getElementById('prod-nome').value = p;
+    document.getElementById('titulo-form-produto').textContent = 'Editar Produto';
+    document.getElementById('banner-edit-produto').style.display = 'flex';
+    document.getElementById('btn-salvar-produto').textContent = 'Salvar Alterações do Produto';
+    document.getElementById('btn-cancelar-produto').style.display = 'block';
+    document.getElementById('prod-nome').focus();
+    avisar('Modo de edição de produto ativado.');
+  }
+
+  function cancelarEdicaoProduto() {
+    editandoProdutoIdx = null;
+    document.getElementById('prod-nome').value = '';
+    document.getElementById('titulo-form-produto').textContent = 'Novo Produto';
+    document.getElementById('banner-edit-produto').style.display = 'none';
+    document.getElementById('btn-salvar-produto').textContent = 'Salvar Produto';
+    document.getElementById('btn-cancelar-produto').style.display = 'none';
+  }
+
   function cadastrarProduto() {
     const input = document.getElementById('prod-nome');
     const nome = input.value.trim().toUpperCase();
 
     if (!nome) return avisar('Digite o nome do produto.', true);
-    if (produtos.includes(nome)) return avisar('Este produto já está cadastrado.', true);
 
-    produtos.push(nome);
-    db.salvar('app_produtos', produtos);
-    input.value = '';
-    desenharProdutosCards();
-    avisar('Produto cadastrado com sucesso!');
+    const duplicado = produtos.some((p, idx) => idx !== editandoProdutoIdx && p === nome);
+    if (duplicado) return avisar('Este produto já está cadastrado.', true);
+
+    if (editandoProdutoIdx !== null) {
+      const nomeAntigo = produtos[editandoProdutoIdx];
+      produtos[editandoProdutoIdx] = nome;
+      db.salvar('app_produtos', produtos);
+
+      vendas.forEach(v => {
+        if (Array.isArray(v.itens)) {
+          v.itens.forEach(item => {
+            if (item.prod === nomeAntigo) item.prod = nome;
+          });
+        }
+      });
+      db.salvar('app_vendas', vendas);
+
+      carrinho.forEach(item => {
+        if (item.prod === nomeAntigo) item.prod = nome;
+      });
+      if (produtoSelecionado === nomeAntigo) {
+        produtoSelecionado = nome;
+        document.getElementById('produto-selecionado-texto').textContent = nome;
+      }
+
+      cancelarEdicaoProduto();
+      desenharProdutosCards();
+      desenharCarrinho();
+      desenharVendas();
+      avisar('Produto atualizado com sucesso!');
+    } else {
+      produtos.push(nome);
+      db.salvar('app_produtos', produtos);
+      input.value = '';
+      desenharProdutosCards();
+      avisar('Produto cadastrado com sucesso!');
+    }
   }
 
   function removerProduto(index) {
+    if (editandoProdutoIdx === index) cancelarEdicaoProduto();
+    else if (editandoProdutoIdx !== null && index < editandoProdutoIdx) editandoProdutoIdx--;
+
     produtos.splice(index, 1);
     db.salvar('app_produtos', produtos);
     desenharProdutosCards();
@@ -569,16 +749,18 @@
     produtos.forEach((p, i) => {
       container.innerHTML += `
         <div class="venda-card" style="border-left-color: #6c757d; padding: 10px 12px;">
-          <div class="venda-card-header" style="margin: 0;">
-            <span style="font-size: 13px; padding-right: 8px;">${p}</span>
-            <button type="button" class="btn-del" onclick="removerProduto(${i})">Excluir</button>
+          <div class="venda-card-header" style="margin: 0; align-items: center;">
+            <span style="font-size: 13px; padding-right: 8px; flex: 1;">${p}</span>
+            <div class="acoes-card">
+              <button type="button" class="btn-edit" onclick="iniciarEdicaoProduto(${i})">Editar</button>
+              <button type="button" class="btn-del" onclick="removerProduto(${i})">Excluir</button>
+            </div>
           </div>
         </div>
       `;
     });
   }
-
-  // --- CARRINHO ---
+// --- CARRINHO ---
   function adicionarProduto() {
     if (!produtoSelecionado) return avisar('Pesquise e toque em um produto primeiro.', true);
     const qtd = parseInt(document.getElementById('qtd').value);
@@ -627,9 +809,68 @@
     document.getElementById('desc-pedido').textContent = formatarBR(desc);
     document.getElementById('tot-pedido').textContent = formatarBR(tot);
   }
-  // --- REGISTRO DE VENDAS E COMPARTILHAMENTO ---
+
+  // --- REGISTRO, EDIÇÃO E COMPARTILHAMENTO DE VENDAS ---
+  function iniciarEdicaoVenda(index) {
+    const v = vendas[index];
+    if (!v) return;
+
+    editandoVendaIdx = index;
+    carrinho = (v.itens || []).map(item => ({
+      prod: item.prod,
+      qtd: item.qtd,
+      val: item.val,
+      sub: item.sub !== undefined ? item.sub : item.qtd * item.val
+    }));
+
+    const clienteEncontrado = clientes.find(c => `${c.nome} (${c.cpf})` === v.cliente || c.nome === v.cliente);
+    if (clienteEncontrado) {
+      selecionarCliente(clienteEncontrado);
+    } else {
+      clienteSelecionado = null;
+      document.getElementById('cliente-selecionado-box').style.display = 'none';
+      const inputCli = document.getElementById('busca-cliente');
+      inputCli.style.display = 'block';
+      inputCli.value = v.cliente || '';
+    }
+
+    document.getElementById('desconto').value = formatarBR(v.desc || 0);
+    document.getElementById('obs').value = v.obs || '';
+    document.getElementById('banner-edit-venda').style.display = 'flex';
+    document.getElementById('btn-salvar-venda').textContent = 'Salvar Alterações da Venda';
+    document.getElementById('btn-cancelar-venda').style.display = 'block';
+
+    desenharCarrinho();
+    ativarAbaPorId('aba-vendas');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    avisar('Modo de edição de pedido ativado.');
+  }
+
+  function cancelarEdicaoVenda() {
+    editandoVendaIdx = null;
+    carrinho = [];
+    document.getElementById('desconto').value = '0,00';
+    document.getElementById('obs').value = '';
+    document.getElementById('banner-edit-venda').style.display = 'none';
+    document.getElementById('btn-salvar-venda').textContent = 'Finalizar e Registrar Venda';
+    document.getElementById('btn-cancelar-venda').style.display = 'none';
+
+    clienteSelecionado = null;
+    document.getElementById('cliente-selecionado-box').style.display = 'none';
+    const inputCli = document.getElementById('busca-cliente');
+    inputCli.value = '';
+    inputCli.style.display = 'block';
+
+    desenharCarrinho();
+  }
+
   function registrarVenda() {
-    if (!clienteSelecionado) return avisar('Selecione um cliente antes de finalizar.', true);
+    const textoClienteManual = document.getElementById('busca-cliente').value.trim();
+    const nomeClienteFinal = clienteSelecionado
+      ? `${clienteSelecionado.nome} (${clienteSelecionado.cpf})`
+      : (editandoVendaIdx !== null && textoClienteManual ? textoClienteManual : '');
+
+    if (!nomeClienteFinal) return avisar('Selecione um cliente antes de finalizar.', true);
     if (carrinho.length === 0) return avisar('Adicione pelo menos 1 produto.', true);
 
     const sub = carrinho.reduce((acc, item) => acc + item.sub, 0);
@@ -637,24 +878,40 @@
     const tot = Math.max(0, sub - desc);
     const obs = document.getElementById('obs').value.trim();
 
-    vendas.unshift({
-      data: new Date().toLocaleDateString('pt-BR'),
-      cliente: `${clienteSelecionado.nome} (${clienteSelecionado.cpf})`,
-      itens: [...carrinho],
-      sub,
-      desc,
-      tot,
-      obs
-    });
-
-    db.salvar('app_vendas', vendas);
-    carrinho = [];
-    document.getElementById('desconto').value = '0,00';
-    document.getElementById('obs').value = '';
-    limparClienteSelecionado();
-    desenharCarrinho();
-    desenharVendas();
-    avisar('Venda registrada com sucesso!');
+    if (editandoVendaIdx !== null) {
+      const vendaOriginal = vendas[editandoVendaIdx];
+      vendas[editandoVendaIdx] = {
+        data: vendaOriginal ? vendaOriginal.data : new Date().toLocaleDateString('pt-BR'),
+        cliente: nomeClienteFinal,
+        itens: [...carrinho],
+        sub,
+        desc,
+        tot,
+        obs
+      };
+      db.salvar('app_vendas', vendas);
+      cancelarEdicaoVenda();
+      desenharVendas();
+      avisar('Venda atualizada com sucesso!');
+    } else {
+      vendas.unshift({
+        data: new Date().toLocaleDateString('pt-BR'),
+        cliente: nomeClienteFinal,
+        itens: [...carrinho],
+        sub,
+        desc,
+        tot,
+        obs
+      });
+      db.salvar('app_vendas', vendas);
+      carrinho = [];
+      document.getElementById('desconto').value = '0,00';
+      document.getElementById('obs').value = '';
+      limparClienteSelecionado();
+      desenharCarrinho();
+      desenharVendas();
+      avisar('Venda registrada com sucesso!');
+    }
   }
 
   function compartilharVenda(index) {
@@ -670,16 +927,7 @@
     msg += `*Total Final:* R$ ${formatarBR(v.tot)}`;
     if (v.obs) msg += `\n*Obs:* ${v.obs}`;
 
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(msg).catch(() => {});
-    }
-
-    if (navigator.share) {
-      navigator.share({ title: 'Resumo do Pedido', text: msg }).catch(() => {});
-    } else {
-      avisar('Texto copiado! Cole no WhatsApp.');
-      window.open('https://wa.me' + encodeURIComponent(msg), '_blank');
-    }
+    enviarTextoCompartilhamento('Resumo do Pedido', msg);
   }
 
   function desenharVendas() {
@@ -698,7 +946,7 @@
         <div class="venda-card">
           <div class="venda-card-header">
             <span>${v.cliente}</span>
-            <span style="color:#666; font-weight:normal;">${v.data}</span>
+            <span style="color:#666; font-weight:normal; white-space:nowrap;">${v.data}</span>
           </div>
           <div class="venda-card-itens">${itensHtml}</div>
           <div class="venda-card-footer">
@@ -706,7 +954,10 @@
             <span style="font-size:16px; color:#28a745;">Total: <strong>R$ ${formatarBR(v.tot)}</strong></span>
           </div>
           ${v.obs ? `<div style="font-size:12px; color:#666; margin-bottom:8px;"><strong>Obs:</strong> ${v.obs}</div>` : ''}
-          <button type="button" class="btn-share-full" onclick="compartilharVenda(${i})">Compartilhar Pedido</button>
+          <div class="acoes-card">
+            <button type="button" class="btn-share-full" onclick="compartilharVenda(${i})">Compartilhar Pedido</button>
+            <button type="button" class="btn-edit-full" onclick="iniciarEdicaoVenda(${i})">Editar</button>
+          </div>
         </div>
       `;
     });
@@ -820,6 +1071,9 @@
         if (Array.isArray(dados.produtos)) produtos = dados.produtos;
         if (Array.isArray(dados.clientes)) clientes = dados.clientes;
         if (Array.isArray(dados.vendas)) vendas = dados.vendas;
+        cancelarEdicaoVenda();
+        cancelarEdicaoCliente();
+        cancelarEdicaoProduto();
         db.salvar('app_produtos', produtos);
         db.salvar('app_clientes', clientes);
         db.salvar('app_vendas', vendas);
